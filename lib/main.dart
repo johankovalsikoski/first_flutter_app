@@ -5,9 +5,10 @@ import 'package:english_words/english_words.dart';
 * StatelessWidget -> Immutable, properties can't change. All values are final.
 * StatefulWidget -> State that might change during the lifetime of the widget. */
 void main() {
-  runApp(RandomWordsList());
+  runApp(App());
 }
 
+/*region First Step*/
 class FirstApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -41,6 +42,20 @@ class _RandomWordsState extends State<RandomWords> {
     return Text(wordPair.asPascalCase);
   }
 }
+/*endregion*/
+
+class App extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "Startup Name Generator",
+      theme: ThemeData(
+        primaryColor: Colors.white,
+      ),
+      home: RandomWordsList(),
+    );
+  }
+}
 
 class RandomWordsList extends StatefulWidget {
   @override
@@ -49,25 +64,41 @@ class RandomWordsList extends StatefulWidget {
 
 class _RandomWordsListState extends State<RandomWordsList> {
   final _suggestion = <WordPair>[];
+  final _favorited = <WordPair>{};
   final _biggerFont = TextStyle(fontSize: 18.0);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-      appBar: AppBar(
-        title: Text("Startup Name Generator"),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: Text("Startup Name Generator"), actions: [
+        IconButton(icon: Icon(Icons.list), onPressed: _pushSaved),
+      ]),
       body: _buildSuggestions(),
-    ));
+    );
   }
 
   Widget _buildRow(WordPair wordPair) {
+    final alreadyFavorited = _favorited.contains(wordPair);
+
     return ListTile(
       title: Text(
         wordPair.asPascalCase,
         style: _biggerFont,
       ),
+      trailing: Icon(
+        alreadyFavorited ? Icons.favorite : Icons.favorite_border,
+        color: alreadyFavorited ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(() {
+          // Triggers a call to the build() to update UI
+          if (alreadyFavorited) {
+            _favorited.remove(wordPair);
+          } else {
+            _favorited.add(wordPair);
+          }
+        });
+      },
     );
   }
 
@@ -86,6 +117,36 @@ class _RandomWordsListState extends State<RandomWordsList> {
         }
         return _buildRow(_suggestion[index]);
       },
+    );
+  }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          final tiles = _favorited.map(
+            (WordPair pair) {
+              return ListTile(
+                title: Text(
+                  pair.asPascalCase,
+                  style: _biggerFont,
+                ),
+              );
+            },
+          );
+          final divided = ListTile.divideTiles(
+            context: context,
+            tiles: tiles,
+          ).toList();
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Saved Suggestions'),
+            ),
+            body: ListView(children: divided),
+          );
+        },
+      ),
     );
   }
 }
