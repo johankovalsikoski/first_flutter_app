@@ -1,6 +1,6 @@
-# first_flutter_app
+# First Flutter App 
 
-A new Flutter application.
+A Flutter application from Flutter.dev and CodeLabs
 
 ## Getting Started
 
